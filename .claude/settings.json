@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm ci)",
+      "Bash(npm start)",
+      "Bash(npm test)",
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npm run e2e)",
+      "Bash(npm run watch)",
+      "Bash(ng serve*)",
+      "Bash(ng build*)",
+      "Bash(ng test*)",
+      "Bash(ng generate*)",
+      "Bash(ng lint*)",
+      "Bash(ng mcp*)",
+      "Bash(npx ng *)",
+      "Bash(npx @angular/cli *)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push)",
+      "Bash(git push origin *)",
+      "Bash(git pull)",
+      "Bash(git pull origin *)"
+    ],
+    "deny": [
+      "Bash(git reset --hard*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git branch -D*)",
+      "Bash(git clean -f*)",
+      "Bash(git checkout -- *)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}
