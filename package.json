@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
+    "build:wasm": "wasm-pack build wasm-producer --target web --out-dir ../public/wasm --out-name producer",
+    "start": "npm run build:wasm && ng serve",
+    "build": "npm run build:wasm && ng build",
+    "watch": "npm run build:wasm && ng build --watch --configuration development",
+    "test": "npm run build:wasm && ng test",
     "lint": "ng lint",
     "e2e": "playwright test"
   },

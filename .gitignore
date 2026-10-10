@@ -11,6 +11,10 @@
 npm-debug.log
 yarn-error.log
 
+# Rust / wasm
+/wasm-producer/target
+/public/wasm
+
 # IDEs and editors
 .idea/
 .project
