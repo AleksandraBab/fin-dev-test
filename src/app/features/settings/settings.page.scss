@@ -1,0 +1,24 @@
+@use '../../../styles/colors';
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 384px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.error {
+  color: colors.$error;
+  font-size: 14px;
+  margin: 0;
+}
+
+.apply-button {
+  cursor: pointer;
+}

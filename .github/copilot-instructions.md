@@ -5,6 +5,7 @@
 - Build standalone Angular components. Prefer signals for local and derived state, and use `OnPush` change detection for new components unless a requirement needs another strategy.
 - Keep TypeScript strict: do not weaken compiler options or use `any` to bypass type errors.
 - Follow the existing SCSS, naming, and folder conventions. Use the Angular CLI to generate Angular artifacts when appropriate.
+- Never define interfaces/types inside logic files (services, pipes, calculation/utility modules, components, workers). Extract every interface/type into a dedicated `models/` subfolder next to the code that uses it, as its own `<name>.model.ts` file (e.g. `core/metrics/models/instrument-metrics.model.ts`, `core/metrics/models/raw-market-record.model.ts`). A type that `extends`/directly derives from another type may live in that same base type's `.model.ts` file; otherwise give it its own file.
 - Add or update focused unit tests for behavior changes. Run `npm run lint`, `npm test`, `npm run e2e`, and `npm run build` when the relevant changes permit it.
 - Never place credentials, API keys, tokens, or private financial data in client-side code, Angular environment files, source control, logs, or test fixtures.
 - Treat AI-generated or financial calculations as untrusted input: validate data at trust boundaries and require explicit user confirmation for irreversible actions.
@@ -40,7 +41,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use `model()` for two-way bound properties with `[(prop)]` syntax instead of pairing `input()` with `output()`
 - Use `computed()` for derived state
 - Use `linkedSignal()` for state derived from multiple reactive sources that must stay synchronized
-- Prefer inline templates for small components
+- Use external template/style files (`templateUrl`/`styleUrl`), not inline `template`/`styles`, regardless of component size
 - Signal Forms (`@angular/forms/signals`) are in developer preview on v21 and become stable in Angular v22+. For financial forms in this app, prefer Reactive Forms until this project upgrades and Signal Forms are stable; re-evaluate after the v22 upgrade.
 - When not using Signal Forms, prefer Reactive forms instead of Template-driven ones
 - Do NOT use `ngClass`, use `class` bindings instead

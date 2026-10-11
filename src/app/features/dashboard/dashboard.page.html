@@ -1,0 +1,60 @@
+<h2 class="title">Live market dashboard</h2>
+
+<div class="toolbar">
+  <button
+    type="button"
+    class="toolbar-button"
+    (click)="togglePause()"
+    [disabled]="producer.status() === 'initializing' || producer.status() === 'error'"
+  >
+    {{ producer.status() === 'paused' ? 'Resume' : 'Pause' }}
+  </button>
+  @if (producer.status() === 'error') {
+    <button type="button" class="toolbar-button" (click)="producer.retry()">Retry</button>
+  }
+  <span role="status">Status: {{ producer.status() | titlecase }}</span>
+</div>
+
+<table class="table" mat-table [dataSource]="rows()">
+  <caption class="caption">
+    Live instrument metrics
+  </caption>
+
+  <ng-container matColumnDef="symbol">
+    <th mat-header-cell class="cell" *matHeaderCellDef scope="col">Symbol</th>
+    <td mat-cell class="cell" *matCellDef="let row">{{ row.symbol }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="lastPrice">
+    <th mat-header-cell class="cell" *matHeaderCellDef scope="col">Last price</th>
+    <td mat-cell class="cell" *matCellDef="let row">{{ row.lastPriceCents | centsCurrency }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="spread">
+    <th mat-header-cell class="cell" *matHeaderCellDef scope="col">Bid-ask spread</th>
+    <td mat-cell class="cell" *matCellDef="let row">{{ row.spreadCents | centsCurrency }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="volume">
+    <th mat-header-cell class="cell" *matHeaderCellDef scope="col">Volume</th>
+    <td mat-cell class="cell" *matCellDef="let row">{{ row.cumulativeVolume }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="vwap">
+    <th mat-header-cell class="cell" *matHeaderCellDef scope="col">VWAP</th>
+    <td mat-cell class="cell" *matCellDef="let row">{{ row.vwapCents | centsCurrency }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="imbalance">
+    <th mat-header-cell class="cell" *matHeaderCellDef scope="col">Order-book imbalance</th>
+    <td mat-cell class="cell" *matCellDef="let row">{{ row.imbalance | imbalance }}</td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  <tr class="no-data-row" *matNoDataRow>
+    <td class="no-data-cell" [attr.colspan]="displayedColumns.length">
+      {{ producer.status() === 'error' ? 'Unable to load market data.' : 'Loading…' }}
+    </td>
+  </tr>
+</table>

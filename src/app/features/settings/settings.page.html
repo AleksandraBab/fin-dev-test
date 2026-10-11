@@ -1,0 +1,61 @@
+<h2>Producer settings</h2>
+<form class="settings-form" [formGroup]="form" (ngSubmit)="onApply()">
+  <div class="field">
+    <label for="instrumentCount">
+      Instrument count ({{ bounds.instrumentCount.min }}–{{ bounds.instrumentCount.max }})
+    </label>
+    <input
+      id="instrumentCount"
+      type="number"
+      formControlName="instrumentCount"
+      [attr.aria-invalid]="isInvalid('instrumentCount')"
+      aria-describedby="instrumentCount-error"
+    />
+    @if (isInvalid('instrumentCount')) {
+      <p id="instrumentCount-error" class="error" role="alert">
+        Enter an integer number between {{ bounds.instrumentCount.min }} and
+        {{ bounds.instrumentCount.max }}.
+      </p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="updatesPerBatch">
+      Updates per batch ({{ bounds.updatesPerBatch.min }}–{{ bounds.updatesPerBatch.max }})
+    </label>
+    <input
+      id="updatesPerBatch"
+      type="number"
+      formControlName="updatesPerBatch"
+      [attr.aria-invalid]="isInvalid('updatesPerBatch')"
+      aria-describedby="updatesPerBatch-error"
+    />
+    @if (isInvalid('updatesPerBatch')) {
+      <p id="updatesPerBatch-error" class="error" role="alert">
+        Enter an integer number between {{ bounds.updatesPerBatch.min }} and
+        {{ bounds.updatesPerBatch.max }}.
+      </p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="batchIntervalMs">
+      Batch interval, ms ({{ bounds.batchIntervalMs.min }}–{{ bounds.batchIntervalMs.max }})
+    </label>
+    <input
+      id="batchIntervalMs"
+      type="number"
+      formControlName="batchIntervalMs"
+      [attr.aria-invalid]="isInvalid('batchIntervalMs')"
+      aria-describedby="batchIntervalMs-error"
+    />
+    @if (isInvalid('batchIntervalMs')) {
+      <p id="batchIntervalMs-error" class="error" role="alert">
+        Enter an integer number between {{ bounds.batchIntervalMs.min }} and
+        {{ bounds.batchIntervalMs.max }}.
+      </p>
+    }
+  </div>
+
+  <button class="apply-button" type="submit" [disabled]="form.invalid">Apply</button>
+</form>

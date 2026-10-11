@@ -50,10 +50,12 @@ struct InstrumentState {
     rng: Rng,
 }
 
-const MIN_PRICE_CENTS: i64 = 100; // $1.00 floor keeps prices strictly positive
 const MIN_HALF_SPREAD_CENTS: i64 = 2; // >0, so bid < ask always holds structurally
 const MAX_HALF_SPREAD_CENTS: i64 = 200;
+const MIN_MID_PRICE_CENTS: i64 = MAX_HALF_SPREAD_CENTS + 1;
+const MAX_MID_PRICE_CENTS: i64 = i32::MAX as i64 - MAX_HALF_SPREAD_CENTS;
 const MAX_BOOK_QTY: u32 = 5_000;
+const MAX_INSTRUMENT_COUNT: u32 = 50;
 const START_MID_PRICE_CENTS: i64 = 10_000; // $100.00
 const START_HALF_SPREAD_CENTS: i64 = 4; // $0.04 total spread
 const START_BOOK_QTY: u32 = 500;
@@ -83,8 +85,12 @@ impl InstrumentState {
     /// on every call.
     fn step(&mut self) -> Record {
         let delta_mid = self.rng.next_i32_in_range(-50, 50);
-        self.mid_price_cents =
-            clamp_i64_delta(self.mid_price_cents, delta_mid, MIN_PRICE_CENTS, i64::MAX);
+        self.mid_price_cents = clamp_i64_delta(
+            self.mid_price_cents,
+            delta_mid,
+            MIN_MID_PRICE_CENTS,
+            MAX_MID_PRICE_CENTS,
+        );
 
         let delta_spread = self.rng.next_i32_in_range(-5, 5);
         self.half_spread_cents = clamp_i64_delta(
@@ -104,7 +110,11 @@ impl InstrumentState {
 
         // Simplified model: each trade's price is chosen from that update's
         // bid or ask, never independently generated.
-        let trade_price_cents = if self.rng.next_bool() { bid_cents } else { ask_cents };
+        let trade_price_cents = if self.rng.next_bool() {
+            bid_cents
+        } else {
+            ask_cents
+        };
         let trade_quantity = self.rng.next_u32_in_range(1, 500);
 
         Record {
@@ -128,12 +138,10 @@ pub struct Engine {
 }
 
 impl Engine {
-    /// `instrument_count` is clamped to at least 1 so the engine never ends
-    /// up with nothing to generate from; callers (the wasm-bindgen surface,
-    /// and ultimately the Angular settings form) also validate this
-    /// themselves, but the engine does not trust its caller.
+    /// Instrument count is clamped to the settings range so the engine never
+    /// has no instruments or allocates unbounded per-instrument state.
     pub fn new(instrument_count: u32, seed: u64) -> Self {
-        let count = instrument_count.max(1);
+        let count = instrument_count.clamp(1, MAX_INSTRUMENT_COUNT);
         let instruments = (0..count)
             .map(|i| {
                 // Distinct, deterministic sub-seed per instrument so each
@@ -143,7 +151,10 @@ impl Engine {
                 InstrumentState::new(sub_seed)
             })
             .collect();
-        Engine { instruments, cursor: 0 }
+        Engine {
+            instruments,
+            cursor: 0,
+        }
     }
 
     pub fn symbols(&self) -> Vec<String> {
@@ -228,7 +239,10 @@ mod tests {
             assert!(rec.trade_price_cents > 0, "trade price must be positive");
             assert!(rec.bid_cents > 0, "bid must be positive");
             assert!(rec.ask_cents > 0, "ask must be positive");
-            assert!(rec.bid_cents < rec.ask_cents, "bid must be strictly below ask");
+            assert!(
+                rec.bid_cents < rec.ask_cents,
+                "bid must be strictly below ask"
+            );
             assert!(rec.trade_quantity > 0, "trade quantity must be positive");
             assert!(rec.bid_qty >= 0, "book quantity must be nonnegative");
             assert!(rec.ask_qty >= 0, "book quantity must be nonnegative");
@@ -238,6 +252,35 @@ mod tests {
             );
             assert!((0..5).contains(&rec.instrument_index));
         }
+    }
+
+    #[test]
+    fn prices_remain_positive_and_fit_transport_at_both_bounds() {
+        for mid_price in [MIN_MID_PRICE_CENTS, MAX_MID_PRICE_CENTS] {
+            let mut instrument = InstrumentState {
+                mid_price_cents: mid_price,
+                half_spread_cents: MAX_HALF_SPREAD_CENTS,
+                bid_qty: 0,
+                ask_qty: MAX_BOOK_QTY,
+                rng: Rng::new(mid_price as u64),
+            };
+
+            for _ in 0..10_000 {
+                let record = instrument.step();
+                assert!(record.bid_cents > 0);
+                assert!(record.bid_cents < record.ask_cents);
+                assert!(record.trade_price_cents > 0);
+                assert!(record.ask_cents <= i32::MAX as i64);
+                assert!(record.trade_price_cents <= i32::MAX as i64);
+            }
+        }
+    }
+
+    #[test]
+    fn instrument_count_is_clamped_to_the_settings_range() {
+        assert_eq!(Engine::new(0, 1).symbols().len(), 1);
+        assert_eq!(Engine::new(50, 1).symbols().len(), 50);
+        assert_eq!(Engine::new(51, 1).symbols().len(), 50);
     }
 
     #[test]
@@ -251,7 +294,10 @@ mod tests {
         let records = decode(&batch);
         for pair in records.windows(2) {
             let diff = (pair[1].bid_cents - pair[0].bid_cents).abs();
-            assert!(diff <= 55, "bid moved {diff} cents in one step, exceeding the max step size");
+            assert!(
+                diff <= 55,
+                "bid moved {diff} cents in one step, exceeding the max step size"
+            );
         }
     }
 
