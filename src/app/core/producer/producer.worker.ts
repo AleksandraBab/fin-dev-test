@@ -73,11 +73,15 @@ function generateAndPostBatch(sessionId: string, updatesPerBatch: number): void 
       type: 'batch',
       sessionId,
       buffer,
-      recordCount: updatesPerBatch,
       strideLength,
     };
     postEvent(event, [buffer]);
   } catch (error) {
+    // A generation failure is treated as fatal for this session, not a
+    // transient blip to retry on the next tick — otherwise a persistent
+    // failure would keep firing every batchIntervalMs forever, repeating
+    // the same error, until the user manually hits Retry.
+    stopInterval();
     postEvent({ type: 'error', sessionId, message: toErrorMessage(error) });
   }
 }

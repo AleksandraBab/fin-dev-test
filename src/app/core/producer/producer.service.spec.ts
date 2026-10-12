@@ -83,7 +83,6 @@ describe('ProducerService', () => {
         type: 'batch',
         sessionId,
         buffer: makeBatchBuffer([[0, 10_200, 30, 10_196, 10_200, 600, 400]]),
-        recordCount: 1,
         strideLength: RAW_RECORD_FIELD_COUNT,
       });
 
@@ -103,7 +102,6 @@ describe('ProducerService', () => {
         type: 'batch',
         sessionId: staleSessionId,
         buffer: makeBatchBuffer([[0, 99_999, 999, 1, 2, 3, 4]]),
-        recordCount: 1,
         strideLength: RAW_RECORD_FIELD_COUNT,
       });
 
@@ -119,7 +117,6 @@ describe('ProducerService', () => {
         type: 'batch',
         sessionId,
         buffer: makeBatchBuffer([[0, 10_000, 10, 9_900, 10_100, 100, 100]]),
-        recordCount: 1,
         strideLength: RAW_RECORD_FIELD_COUNT,
       });
       expect(service.metrics().get('ALFA')?.cumulativeVolume).toBe(10);
@@ -166,7 +163,6 @@ describe('ProducerService', () => {
         type: 'batch',
         sessionId,
         buffer: makeBatchBuffer([[0, 10_000, 10, 9_900, 10_100, 100, 100]]),
-        recordCount: 1,
         strideLength: RAW_RECORD_FIELD_COUNT,
       });
       service.pause();

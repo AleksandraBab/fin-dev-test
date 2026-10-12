@@ -29,7 +29,6 @@ export interface BatchEvent {
   readonly type: 'batch';
   readonly sessionId: string;
   readonly buffer: ArrayBuffer;
-  readonly recordCount: number;
   readonly strideLength: number;
 }
 

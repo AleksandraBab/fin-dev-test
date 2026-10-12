@@ -10,14 +10,12 @@ describe('DashboardPage', () => {
   let fixture: ComponentFixture<DashboardPage>;
   let pause: ReturnType<typeof vi.fn>;
   let resume: ReturnType<typeof vi.fn>;
-  let retry: ReturnType<typeof vi.fn>;
   let statusSignal: ReturnType<typeof signal<ProducerStatus>>;
   let metricsSignal: ReturnType<typeof signal<ReadonlyMap<string, InstrumentMetrics>>>;
 
   beforeEach(() => {
     pause = vi.fn();
     resume = vi.fn();
-    retry = vi.fn();
     statusSignal = signal<ProducerStatus>('running');
     metricsSignal = signal<ReadonlyMap<string, InstrumentMetrics>>(new Map());
 
@@ -26,7 +24,6 @@ describe('DashboardPage', () => {
       metrics: metricsSignal,
       pause,
       resume,
-      retry,
     };
 
     TestBed.configureTestingModule({
@@ -87,19 +84,15 @@ describe('DashboardPage', () => {
     expect(labels).not.toContain('Retry');
   });
 
-  it('shows a Retry button that calls producer.retry() when errored, regardless of whether rows already exist', () => {
+  it('does not duplicate the app-shell Retry button on the dashboard', () => {
     metricsSignal.set(new Map([['ALFA', createInitialMetrics('ALFA')]]));
     statusSignal.set('error');
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const retryButton = Array.from(compiled.querySelectorAll('button')).find(
-      (b) => b.textContent?.trim() === 'Retry',
+    const buttonLabels = Array.from(compiled.querySelectorAll('button')).map((button) =>
+      button.textContent?.trim(),
     );
-    expect(retryButton).toBeTruthy();
-
-    retryButton!.click();
-
-    expect(retry).toHaveBeenCalled();
+    expect(buttonLabels).not.toContain('Retry');
   });
 });

@@ -1,59 +1,87 @@
-# FinDevTest
+# Realtime Fintech Dashboard
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.26.
+An Angular dashboard that displays simulated market data. The simulation is written in Rust, compiled to WebAssembly, and run in a Web Worker so generating data does not block the page.
 
-## Development server
+## How the app fits together
 
-To start a local development server, run:
-
-```bash
-ng serve
+```text
+Dashboard / Settings
+        ↓ read state or call actions
+ProducerService (one app-wide owner of the current run)
+        ↓ sends init / pause / resume commands
+Web Worker
+        ↓ calls the compiled Rust functions
+WebAssembly market-data producer
+        ↓ returns batches of trade and quote records
+Web Worker
+        ↓ transfers the batch back to the app
+ProducerService → metric calculations → Dashboard
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### Follow one batch of data
 
-## Code scaffolding
+1. The Worker calls the Rust/Wasm producer to generate the configured number of market updates.
+2. Each update describes one trade and that instrument's bid/ask snapshot. Prices are integer cents; one record contains an instrument index, trade price and quantity, bid and ask prices, and bid and ask quantities.
+3. The Worker transfers the batch to the main app as a compact numeric buffer. The records are processed and then discarded; the app does not keep the complete event history.
+4. `ProducerService` ignores batches from an old run, decodes the current batch, and passes its records to the metric functions.
+5. The metric functions update cumulative volume and notional for each instrument. The dashboard derives and formats VWAP, spread, and order-book imbalance for display.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Where to look in the code
+
+| Location | Responsibility |
+|---|---|
+| `src/app/app.ts`, `src/app/app.html` | App shell, navigation, and producer-wide error message. |
+| `src/app/app.routes.ts` | Maps `/dashboard` and `/settings` to their pages; pages are loaded only when visited. |
+| `src/app/features/dashboard/` | Market table, Pause/Resume control, and dashboard presentation. |
+| `src/app/features/settings/` | Draft settings form and validation. Apply starts a new run; editing alone does not change the producer. |
+| `src/app/core/producer/producer.service.ts` | Owns the single producer run and its settings, status, and current metrics. Root scope keeps it alive during page navigation. |
+| `src/app/core/producer/producer.worker.ts` | Loads Wasm, handles producer commands, and transfers generated batches to the app. |
+| `src/app/core/producer/models/producer-messages.model.ts` | TypeScript message shapes exchanged between the service and Worker. |
+| `src/app/core/metrics/metrics-calculations.ts` | Decodes updates and calculates cumulative trade metrics. |
+| `wasm-producer/src/engine.rs` | Rust market simulation: per-instrument state, price evolution, quote snapshots, and batch generation. |
+| `wasm-producer/src/rng.rs` | Seeded pseudo-random number generator used by the Rust simulation. |
+| `wasm-producer/src/lib.rs` | Exposes the Rust producer functions to JavaScript through `wasm-bindgen`. |
+
+The `runId` is a simple identifier for one Apply/retry run. When a new run starts, the service changes the ID and clears its metrics. Messages tagged with an older ID are ignored, so an already queued result cannot overwrite the new run.
+
+Pausing stops the Worker's timer. Resuming starts the timer again but keeps the same producer instance and cumulative totals. Moving between Dashboard and Settings does not create another producer.
+
+## Requirements
+
+- Node.js version allowed by `package.json` (the repository's `.nvmrc` selects Node 24).
+- Rust toolchain and the `wasm32-unknown-unknown` target.
+- `wasm-pack` installed and available on `PATH`.
+- npm dependencies installed with `npm ci`.
+
+If the Rust target is not installed yet:
 
 ```bash
-ng generate component component-name
+rustup target add wasm32-unknown-unknown
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Install `wasm-pack` using its official installation instructions: <https://rustwasm.github.io/wasm-pack/installer/>.
+
+## Run locally
+
+From this directory:
 
 ```bash
-ng generate --help
+npm ci
+npm start
 ```
 
-## Building
+`npm start` first compiles the Rust crate and writes the browser-ready Wasm package to `public/wasm/`, then starts Angular at `http://localhost:4200/`.
 
-To build the project run:
+## Build and tests
 
 ```bash
-ng build
+npm run build       # Build Wasm, then the optimized Angular app
+npm test            # Build Wasm, then run Angular unit tests
+npm run lint        # Lint Angular TypeScript and templates
+npm run e2e         # Run the Playwright browser smoke test
+cargo test --manifest-path wasm-producer/Cargo.toml
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+The Rust tests use fixed seeds and do not need browser timers. `npm test` runs Angular unit tests; the Cargo command tests the market-data generator itself. Playwright is an additional browser-level smoke test.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The generated `wasm-producer/target/` and `public/wasm/` directories are build output and are ignored by Git. Keep the Rust source and `Cargo.lock` in version control; the Wasm package is regenerated by the npm build/start scripts.

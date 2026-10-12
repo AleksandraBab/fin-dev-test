@@ -9,9 +9,6 @@
   >
     {{ producer.status() === 'paused' ? 'Resume' : 'Pause' }}
   </button>
-  @if (producer.status() === 'error') {
-    <button type="button" class="toolbar-button" (click)="producer.retry()">Retry</button>
-  }
   <span role="status">Status: {{ producer.status() | titlecase }}</span>
 </div>
 

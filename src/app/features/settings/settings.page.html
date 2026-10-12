@@ -9,7 +9,7 @@
       type="number"
       formControlName="instrumentCount"
       [attr.aria-invalid]="isInvalid('instrumentCount')"
-      aria-describedby="instrumentCount-error"
+      [attr.aria-describedby]="isInvalid('instrumentCount') ? 'instrumentCount-error' : null"
     />
     @if (isInvalid('instrumentCount')) {
       <p id="instrumentCount-error" class="error" role="alert">
@@ -28,7 +28,7 @@
       type="number"
       formControlName="updatesPerBatch"
       [attr.aria-invalid]="isInvalid('updatesPerBatch')"
-      aria-describedby="updatesPerBatch-error"
+      [attr.aria-describedby]="isInvalid('updatesPerBatch') ? 'updatesPerBatch-error' : null"
     />
     @if (isInvalid('updatesPerBatch')) {
       <p id="updatesPerBatch-error" class="error" role="alert">
@@ -47,7 +47,7 @@
       type="number"
       formControlName="batchIntervalMs"
       [attr.aria-invalid]="isInvalid('batchIntervalMs')"
-      aria-describedby="batchIntervalMs-error"
+      [attr.aria-describedby]="isInvalid('batchIntervalMs') ? 'batchIntervalMs-error' : null"
     />
     @if (isInvalid('batchIntervalMs')) {
       <p id="batchIntervalMs-error" class="error" role="alert">
