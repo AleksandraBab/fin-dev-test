@@ -2,7 +2,8 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { createInitialMetrics, type InstrumentMetrics } from '../../core/metrics/models/instrument-metrics.model';
-import { ProducerService, type ProducerStatus } from '../../core/producer/producer.service';
+import { ProducerService } from '../../core/producer/producer.service';
+import type { ProducerStatus } from '../../core/producer/models/producer-status.model';
 import { DashboardPage } from './dashboard.page';
 
 describe('DashboardPage', () => {
