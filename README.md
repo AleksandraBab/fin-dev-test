@@ -1,5 +1,8 @@
 # Realtime Fintech Dashboard
 
+**Repository:** <https://github.com/AleksandraBab/fin-dev-test> (branch `develop`)
+**Live demo:** <https://fin-dev-test.pages.dev>
+
 An Angular dashboard that displays simulated market data. The simulation is written in Rust, compiled to WebAssembly, and run in a Web Worker so generating data does not block the page.
 
 ## How the app fits together
@@ -42,7 +45,7 @@ ProducerService → metric calculations → Dashboard
 | `wasm-producer/src/rng.rs` | Seeded pseudo-random number generator used by the Rust simulation. |
 | `wasm-producer/src/lib.rs` | Exposes the Rust producer functions to JavaScript through `wasm-bindgen`. |
 
-The `runId` is a simple identifier for one Apply/retry run. When a new run starts, the service changes the ID and clears its metrics. Messages tagged with an older ID are ignored, so an already queued result cannot overwrite the new run.
+The `sessionId` is a simple identifier for one Apply/retry run. When a new run starts, the service changes the ID and clears its metrics. Messages tagged with an older ID are ignored, so an already queued result cannot overwrite the new run.
 
 Pausing stops the Worker's timer. Resuming starts the timer again but keeps the same producer instance and cumulative totals. Moving between Dashboard and Settings does not create another producer.
 
