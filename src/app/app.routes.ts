@@ -10,4 +10,8 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.page').then((m) => m.SettingsPage),
   },
+  {
+    path: '**',
+    loadComponent: () => import('./features/not-found/not-found.page').then((m) => m.NotFoundPage),
+  },
 ];
